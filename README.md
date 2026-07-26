@@ -20,25 +20,7 @@ A full-stack restaurant management web app with:
 
 ## 2. Setup
 
-### Step 1 — Add your Groq API key
-
-Open `backend/.env` and set:
-
-```
-GROQ_API_KEY=your_groq_api_key_here
-```
-
-(The app works fine without it — you'll just get a friendly "AI not configured" message from the AI endpoints until you add a key.)
-
-You can also change the default admin login and JWT secret in that same file:
-
-```
-JWT_SECRET_KEY=change_this_to_a_long_random_secret_string
-DEFAULT_ADMIN_EMAIL=admin@restaurant.com
-DEFAULT_ADMIN_PASSWORD=Admin@123
-```
-
-### Step 2 — Start everything with Docker Compose
+### Step 1 — Start everything with Docker Compose
 
 From the project root:
 
@@ -59,9 +41,9 @@ On first boot, the backend automatically:
 - Creates all database tables
 - Seeds a default **admin account** and **sample menu items / employees**
 
-### Step 3 — Log in
+### Step 2 — Log in
 
-- **Admin:** `admin@restaurant.com` / `Admin@123` (change this in `backend/.env` before going live)
+- **Admin:** put user name and password .
 - **Customer:** click "Sign up" to create a new account
 
 ---
