@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  backend-check:
+    name: Backend — install & syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: pip install -r requirements.txt
+
+      - name: Compile check (catch syntax/import errors)
+        working-directory: ./backend
+        run: python -m py_compile app/*.py app/routers/*.py
+
+  frontend-check:
+    name: Frontend — install & build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+  docker-build-check:
+    name: Docker — validate images build
+    runs-on: ubuntu-latest
+    needs: [backend-check, frontend-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: restaurant-backend:ci
+
+      - name: Build frontend image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: restaurant-frontend:ci
