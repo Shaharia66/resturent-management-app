@@ -1,4 +1,4 @@
-# Olive & Ember — Restaurant Management System
+# Olive & Ember — Restaurant Management System(made by saif)
 
 A full-stack restaurant management web app with:
 
@@ -114,7 +114,7 @@ restaurant-app/
 - View a dish's price, description, average star rating, and all comments
 - Rate dishes (1–5 stars) and leave comments
 - Add items to a cart (stored in Redis, persists across sessions for 3 days)
-- Checkout with delivery address, phone, and notes
+- Checkout with delivery address,phone,and notes
 - Track order status (pending → confirmed → preparing → out for delivery → delivered)
 - **Ask AI** — chat with an assistant that knows the current menu, prices, ratings and recent comments
 
