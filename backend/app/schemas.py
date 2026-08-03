@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models import UserRole, OrderStatus
+from app.models import UserRole, OrderStatus, TableOrderStatus
 
 
 # ---------- Auth / User ----------
@@ -228,3 +228,77 @@ class AIQuestion(BaseModel):
 
 class AIAnswer(BaseModel):
     answer: str
+
+# ---------- Dine-in tables ----------
+
+class DiningTableCreate(BaseModel):
+    name: str
+    capacity: int = 4
+
+
+class DiningTableUpdate(BaseModel):
+    name: Optional[str] = None
+    capacity: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class DiningTableOut(BaseModel):
+    id: int
+    name: str
+    capacity: int
+    is_active: bool
+    is_occupied: bool = False
+    active_order_id: Optional[int] = None
+    active_order_status: Optional[TableOrderStatus] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TableOrderItemIn(BaseModel):
+    food_item_id: int
+    quantity: int = Field(ge=1, default=1)
+    notes: Optional[str] = None
+
+
+class TableOrderCreate(BaseModel):
+    table_id: int
+    items: List[TableOrderItemIn]
+
+
+class TableOrderItemOut(BaseModel):
+    id: int
+    food_item_id: int
+    name: str
+    quantity: int
+    price_at_order: float
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TableOrderOut(BaseModel):
+    id: int
+    table_id: int
+    table_name: Optional[str] = None
+    status: TableOrderStatus
+    total_amount: float
+    is_closed: bool
+    created_at: datetime
+    updated_at: datetime
+    items: List[TableOrderItemOut] = []
+
+    class Config:
+        from_attributes = True
+
+
+class TableOrderStatusUpdate(BaseModel):
+    status: TableOrderStatus
+
+
+class TableOrderAddItem(BaseModel):
+    food_item_id: int
+    quantity: int = Field(ge=1, default=1)
+    notes: Optional[str] = None
+

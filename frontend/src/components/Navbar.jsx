@@ -19,7 +19,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-ivory/95 backdrop-blur border-b border-olive-200">
+    <header className="sticky top-0 z-40 bg-ivory/95 backdrop-blur border-b border-olive-200 print:hidden">
       <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
           <span className="seal-badge w-9 h-9 text-ivory font-display font-semibold text-sm">

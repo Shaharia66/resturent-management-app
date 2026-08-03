@@ -23,6 +23,12 @@ class OrderStatus(str, enum.Enum):
     delivered = "delivered"
     cancelled = "cancelled"
 
+class TableOrderStatus(str, enum.Enum):
+    received = "received"
+    delivered = "delivered"
+    bill_given = "bill_given"
+    bill_received = "bill_received"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -146,3 +152,45 @@ class OrderItem(Base):
 
     order = relationship("Order", back_populates="items")
     food_item = relationship("FoodItem", back_populates="order_items")
+
+class DiningTable(Base):
+    __tablename__ = "dining_tables"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True, nullable=False)
+    capacity = Column(Integer, default=4)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    orders = relationship("TableOrder", back_populates="table")
+
+
+class TableOrder(Base):
+    __tablename__ = "table_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    table_id = Column(Integer, ForeignKey("dining_tables.id"), nullable=False)
+    status = Column(Enum(TableOrderStatus), default=TableOrderStatus.received, nullable=False)
+    total_amount = Column(Float, default=0)
+    is_closed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    closed_at = Column(DateTime, nullable=True)
+
+    table = relationship("DiningTable", back_populates="orders")
+    items = relationship("TableOrderItem", back_populates="table_order", cascade="all, delete-orphan")
+
+
+class TableOrderItem(Base):
+    __tablename__ = "table_order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    table_order_id = Column(Integer, ForeignKey("table_orders.id"), nullable=False)
+    food_item_id = Column(Integer, ForeignKey("food_items.id"), nullable=False)
+    quantity = Column(Integer, default=1)
+    price_at_order = Column(Float, nullable=False)
+    notes = Column(String(300), nullable=True)
+
+    table_order = relationship("TableOrder", back_populates="items")
+    food_item = relationship("FoodItem")
+    

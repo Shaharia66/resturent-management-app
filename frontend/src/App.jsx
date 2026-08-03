@@ -19,6 +19,10 @@ import AdminFoodItems from './pages/admin/AdminFoodItems'
 import AdminEmployees from './pages/admin/AdminEmployees'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminAI from './pages/admin/AdminAI'
+import AdminTables from './pages/admin/AdminTables'
+import AdminTableSettings from './pages/admin/AdminTableSettings'
+import PrintKitchenTicket from './pages/admin/PrintKitchenTicket'
+import PrintBill from './pages/admin/PrintBill'
 
 export default function App() {
   return (
@@ -44,19 +48,39 @@ export default function App() {
                 <AdminLayout />
               </ProtectedRoute>
             }
+            
           >
             <Route index element={<AdminDashboard />} />
             <Route path="food-items" element={<AdminFoodItems />} />
             <Route path="employees" element={<AdminEmployees />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="ai" element={<AdminAI />} />
+            <Route path="tables" element={<AdminTables />} />
+            <Route path="tables/settings" element={<AdminTableSettings />} />
           </Route>
+          {/* Print pages render full-screen, without the admin sidebar */}
+          <Route
+            path="/admin/print/kitchen/:orderId"
+            element={
+              <ProtectedRoute adminOnly>
+                <PrintKitchenTicket />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/print/bill/:orderId"
+            element={
+              <ProtectedRoute adminOnly>
+                <PrintBill />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
 
-      <footer className="border-t border-olive-200 py-8 mt-10">
+      <footer className="border-t border-olive-200 py-8 mt-10 print:hidden">
         <div className="max-w-6xl mx-auto px-5 text-center text-sm text-olive-500">
           © {new Date().getFullYear()} Olive &amp; Ember Restaurant. Built with FastAPI, React, MySQL &amp; Redis.
         </div>

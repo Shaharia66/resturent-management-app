@@ -3,9 +3,11 @@ import { NavLink, Outlet } from 'react-router-dom'
 
 const links = [
   { to: '/admin', label: 'Dashboard', end: true },
+  { to: '/admin/tables', label: 'Dine-In Tables', end: true },
+  { to: '/admin/tables/settings', label: 'Table Settings' },
   { to: '/admin/food-items', label: 'Food & Inventory' },
   { to: '/admin/employees', label: 'Employees' },
-  { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/orders', label: 'Online Orders' },
   { to: '/admin/ai', label: 'Ask AI' },
 ]
 
