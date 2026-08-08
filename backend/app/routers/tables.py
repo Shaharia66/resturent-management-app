@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
 from app.deps import get_current_admin
+from app.inventory import consume_ingredients_for_order
 
 router = APIRouter(prefix="/api/admin", tags=["dine-in"])
 
@@ -188,7 +189,7 @@ def create_table_order(
         )
         db.add(order_item)
         total += food_item.price * item_in.quantity
-        food_item.stock_quantity = max(0, food_item.stock_quantity - item_in.quantity)
+        consume_ingredients_for_order(db, food_item, item_in.quantity)
 
     order.total_amount = round(total, 2)
     db.commit()
@@ -221,7 +222,7 @@ def add_item_to_table_order(
         notes=payload.notes,
     )
     db.add(order_item)
-    food_item.stock_quantity = max(0, food_item.stock_quantity - payload.quantity)
+    consume_ingredients_for_order(db, food_item, payload.quantity)
     order.total_amount = round(order.total_amount + food_item.price * payload.quantity, 2)
     db.commit()
     db.refresh(order)

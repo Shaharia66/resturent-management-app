@@ -1,4 +1,5 @@
 from typing import List
+from app.inventory import consume_ingredients_for_order
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -76,9 +77,8 @@ def checkout(
         db.add(order_item)
         total += item.price * quantity
 
-        # decrement stock (never below 0)
-        item.stock_quantity = max(0, item.stock_quantity - quantity)
-
+        consume_ingredients_for_order(db, item, quantity)
+        
     order.total_amount = round(total, 2)
     db.commit()
     db.refresh(order)

@@ -119,7 +119,12 @@ export default function AdminFoodItems() {
               <tr key={item.id} className="border-b border-olive-50 last:border-0">
                 <td className="px-4 py-3 font-medium text-ink">{item.name}</td>
                 <td className="px-4 py-3">${item.price.toFixed(2)}</td>
-                <td className="px-4 py-3">{item.stock_quantity} {item.unit}</td>
+                <td className="px-4 py-3">
+                  {item.stock_quantity} {item.unit}
+                  {item.has_recipe && (
+                    <span className="ml-1.5 text-xs text-olive-500">(auto)</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   {item.needs_restock ? (
                     <span className="text-xs px-2 py-1 rounded-full bg-paprika-100 text-paprika-700 font-medium">

@@ -91,6 +91,7 @@ class FoodItem(Base):
     ratings = relationship("Rating", back_populates="food_item", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="food_item", cascade="all, delete-orphan")
     order_items = relationship("OrderItem", back_populates="food_item")
+    recipe_rows = relationship("RecipeIngredient", back_populates="food_item", cascade="all, delete-orphan")
 
     @property
     def needs_restock(self) -> bool:
@@ -193,4 +194,33 @@ class TableOrderItem(Base):
 
     table_order = relationship("TableOrder", back_populates="items")
     food_item = relationship("FoodItem")
-    
+
+class BazarItem(Base):
+    __tablename__ = "bazar_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(150), unique=True, nullable=False)
+    quantity = Column(Float, default=0)
+    unit = Column(String(30), default="g")
+    reorder_threshold = Column(Float, default=100)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    recipe_rows = relationship("RecipeIngredient", back_populates="bazar_item", cascade="all, delete-orphan")
+
+    @property
+    def needs_restock(self) -> bool:
+        return self.quantity <= self.reorder_threshold
+
+
+class RecipeIngredient(Base):
+    __tablename__ = "recipe_ingredients"
+    __table_args__ = (UniqueConstraint("food_item_id", "bazar_item_id", name="uq_food_bazar_ingredient"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    food_item_id = Column(Integer, ForeignKey("food_items.id"), nullable=False)
+    bazar_item_id = Column(Integer, ForeignKey("bazar_items.id"), nullable=False)
+    quantity_per_unit = Column(Float, nullable=False)
+
+    food_item = relationship("FoodItem", back_populates="recipe_rows")
+    bazar_item = relationship("BazarItem", back_populates="recipe_rows")
+

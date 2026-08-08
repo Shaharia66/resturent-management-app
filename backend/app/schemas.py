@@ -118,6 +118,7 @@ class FoodItemOut(FoodItemBase):
     needs_restock: bool
     average_rating: float = 0
     rating_count: int = 0
+    has_recipe: bool = False
 
     class Config:
         from_attributes = True
@@ -302,3 +303,54 @@ class TableOrderAddItem(BaseModel):
     quantity: int = Field(ge=1, default=1)
     notes: Optional[str] = None
 
+# ---------- Bazar List (raw ingredients) & recipes ----------
+
+class BazarItemCreate(BaseModel):
+    name: str
+    quantity: float = 0
+    unit: str = "g"
+    reorder_threshold: float = 100
+
+
+class BazarItemUpdate(BaseModel):
+    name: Optional[str] = None
+    quantity: Optional[float] = None
+    unit: Optional[str] = None
+    reorder_threshold: Optional[float] = None
+
+
+class BazarItemOut(BaseModel):
+    id: int
+    name: str
+    quantity: float
+    unit: str
+    reorder_threshold: float
+    needs_restock: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class RecipeIngredientIn(BaseModel):
+    bazar_item_id: int
+    quantity_per_unit: float = Field(gt=0)
+
+
+class RecipeIngredientOut(BaseModel):
+    bazar_item_id: int
+    bazar_item_name: str
+    unit: str
+    quantity_per_unit: float
+    bazar_stock: float
+    needs_restock: bool
+
+
+class FoodRecipeOut(BaseModel):
+    food_item_id: int
+    food_item_name: str
+    ingredients: List[RecipeIngredientOut] = []
+
+
+class FoodRecipeUpdate(BaseModel):
+    ingredients: List[RecipeIngredientIn]

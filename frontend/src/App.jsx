@@ -23,6 +23,9 @@ import AdminTables from './pages/admin/AdminTables'
 import AdminTableSettings from './pages/admin/AdminTableSettings'
 import PrintKitchenTicket from './pages/admin/PrintKitchenTicket'
 import PrintBill from './pages/admin/PrintBill'
+import AdminBazarList from './pages/admin/AdminBazarList'
+import AdminMakingFoodInfo from './pages/admin/AdminMakingFoodInfo'
+
 
 export default function App() {
   return (
@@ -57,6 +60,9 @@ export default function App() {
             <Route path="ai" element={<AdminAI />} />
             <Route path="tables" element={<AdminTables />} />
             <Route path="tables/settings" element={<AdminTableSettings />} />
+            <Route path="bazar" element={<AdminBazarList />} />
+            <Route path="making-food-info" element={<AdminMakingFoodInfo />} />
+            
           </Route>
           {/* Print pages render full-screen, without the admin sidebar */}
           <Route

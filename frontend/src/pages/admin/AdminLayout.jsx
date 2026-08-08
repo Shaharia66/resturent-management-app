@@ -6,6 +6,8 @@ const links = [
   { to: '/admin/tables', label: 'Dine-In Tables', end: true },
   { to: '/admin/tables/settings', label: 'Table Settings' },
   { to: '/admin/food-items', label: 'Food & Inventory' },
+  { to: '/admin/bazar', label: 'Bazar List' },
+  { to: '/admin/making-food-info', label: 'Making Food Info' },
   { to: '/admin/employees', label: 'Employees' },
   { to: '/admin/orders', label: 'Online Orders' },
   { to: '/admin/ai', label: 'Ask AI' },

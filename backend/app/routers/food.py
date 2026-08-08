@@ -1,4 +1,5 @@
 from typing import List, Optional
+import math
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -20,10 +21,35 @@ def _serialize_food_item(db: Session, item: models.FoodItem) -> schemas.FoodItem
     )
     avg_rating = round(float(agg[0]), 2) if agg and agg[0] else 0.0
     count = agg[1] if agg else 0
+
     out = schemas.FoodItemOut.model_validate(item)
     out.average_rating = avg_rating
     out.rating_count = count
-    out.needs_restock = item.needs_restock
+
+    recipe_rows = (
+        db.query(models.RecipeIngredient)
+        .filter(models.RecipeIngredient.food_item_id == item.id)
+        .all()
+    )
+
+    if recipe_rows:
+        # Stock is computed live from the Bazar List: how many units can currently be made
+        makeable_counts = []
+        any_ingredient_low = False
+        for row in recipe_rows:
+            bazar_item = row.bazar_item
+            if bazar_item and row.quantity_per_unit > 0:
+                makeable_counts.append(math.floor(bazar_item.quantity / row.quantity_per_unit))
+                if bazar_item.needs_restock:
+                    any_ingredient_low = True
+        computed_stock = min(makeable_counts) if makeable_counts else 0
+        out.stock_quantity = computed_stock
+        out.needs_restock = any_ingredient_low or computed_stock <= item.reorder_threshold
+        out.has_recipe = True
+    else:
+        out.needs_restock = item.needs_restock
+        out.has_recipe = False
+
     return out
 
 

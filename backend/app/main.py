@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine, wait_for_db, SessionLocal
 from app.seed import run_seed
-from app.routers import auth, food, employees, cart, orders, ai, tables
+from app.routers import auth, food, employees, cart, orders, ai, tables, bazar
 
 
 @asynccontextmanager
@@ -37,6 +37,7 @@ app.include_router(cart.router)
 app.include_router(orders.router)
 app.include_router(ai.router)
 app.include_router(tables.router)
+app.include_router(bazar.router)
 
 
 @app.get("/api/health")
