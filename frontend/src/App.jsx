@@ -67,6 +67,7 @@ export default function App() {
             <Route path="bazar" element={<AdminBazarList />} />
             <Route path="food-recipe" element={<AdminFoodRecipe />} />
             <Route path="today-bazar" element={<AdminTodayBazar />} />
+            <Route path="site-settings" element={<AdminSiteSettings />} />
             
           </Route>
           {/* Print pages render full-screen, without the admin sidebar */}
