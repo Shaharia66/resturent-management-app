@@ -27,6 +27,7 @@ import AdminBazarList from './pages/admin/AdminBazarList'
 import AdminFoodRecipe from './pages/admin/AdminFoodRecipe'
 import AdminTodayBazar from './pages/admin/AdminTodayBazar'
 import PrintShoppingList from './pages/admin/PrintShoppingList'
+import AdminSiteSettings from './pages/admin/AdminSiteSettings'
 
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
           <Route path="/ask-ai" element={<ProtectedRoute><CustomerAI /></ProtectedRoute>} />
+          <Route path="site-settings" element={<AdminSiteSettings />} />
 
           <Route
             path="/admin"

@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom'
 import client from '../api/client'
 import FoodCard from '../components/FoodCard'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { useSettings } from '../context/SettingsContext'
+import { API_URL } from '../api/client'
 
 export default function Home() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const { settings } = useSettings()
 
   useEffect(() => {
     client
@@ -27,13 +30,11 @@ export default function Home() {
             <span className="inline-block text-xs uppercase tracking-[0.2em] text-mustard-400 font-medium mb-4">
               Kitchen order no. 001 — table for you
             </span>
-            <h1 className="text-4xl md:text-5xl font-display font-semibold leading-tight">
-              Slow-cooked flavor,
-              <br />served without delay.
+            <h1 className="text-4xl md:text-5xl font-display font-semibold leading-tight whitespace-pre-line">
+              {settings.hero_heading}
             </h1>
             <p className="text-olive-200 mt-5 max-w-md">
-              Browse today's menu, see what fellow diners rated highest, and let our
-              AI concierge help you pick your next favorite dish.
+              {settings.hero_subheading}
             </p>
             <div className="flex flex-wrap gap-3 mt-8">
               <Link
@@ -54,13 +55,13 @@ export default function Home() {
             <div className="ticket-divider md:hidden my-6" />
             <div className="grid grid-cols-2 gap-4">
               <img
-                src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500"
-                alt="Plated dish"
+                src={settings.hero_image_1_url ? `${API_URL}${settings.hero_image_1_url}` : 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500'}
+                alt="Restaurant photo"
                 className="rounded-2xl object-cover h-48 w-full"
               />
               <img
-                src="https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=500"
-                alt="Chef preparing food"
+                src={settings.hero_image_2_url ? `${API_URL}${settings.hero_image_2_url}` : 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=500'}
+                alt="Restaurant photo"
                 className="rounded-2xl object-cover h-48 w-full mt-8"
               />
             </div>

@@ -12,6 +12,7 @@ const links = [
   { to: '/admin/employees', label: 'Employees' },
   { to: '/admin/orders', label: 'Online Orders' },
   { to: '/admin/ai', label: 'Ask AI' },
+  { to: '/admin/site-settings', label: 'Site Settings' },
 ]
 
 export default function AdminLayout() {

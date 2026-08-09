@@ -5,7 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine, wait_for_db, SessionLocal
 from app.seed import run_seed
-from app.routers import auth, food, employees, cart, orders, ai, tables, bazar
+import os
+from fastapi.staticfiles import StaticFiles
+
+from app.routers import auth, food, employees, cart, orders, ai, tables, bazar, site_settings
 
 
 @asynccontextmanager
@@ -29,6 +32,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(auth.router)
 app.include_router(food.router)
@@ -38,6 +43,7 @@ app.include_router(orders.router)
 app.include_router(ai.router)
 app.include_router(tables.router)
 app.include_router(bazar.router)
+app.include_router(site_settings.router)
 
 
 @app.get("/api/health")

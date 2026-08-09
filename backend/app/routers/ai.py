@@ -10,6 +10,7 @@ from app import models, schemas
 from app.deps import get_current_user, get_current_admin
 from app.groq_client import ask_groq
 from app.redis_client import redis_client
+from app.routers.food import _serialize_food_item
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
@@ -21,7 +22,7 @@ def _cache_key(prefix: str, question: str, extra: str = "") -> str:
     return f"ai_cache:{prefix}:{digest}"
 
 
-# ---------- Admin AI: employees + inventory (what to buy / what to store) ----------
+# ---------- Admin AI: employees, inventory, bazar list, recipes, dine-in tables ----------
 
 @router.post("/admin/ask", response_model=schemas.AIAnswer)
 async def admin_ask(
@@ -34,9 +35,8 @@ async def admin_ask(
     if cached:
         return schemas.AIAnswer(answer=cached)
 
+    # --- Employees ---
     employees = db.query(models.Employee).all()
-    food_items = db.query(models.FoodItem).all()
-
     employees_summary = [
         {
             "name": e.name,
@@ -49,38 +49,114 @@ async def admin_ask(
         for e in employees
     ]
 
-    food_summary = [
+    # --- Food items (reuses the same stock computation as the Food & Inventory page,
+    # so recipe-based dishes show their live, ingredient-derived stock here too) ---
+    food_items = db.query(models.FoodItem).all()
+    food_summary = []
+    for f in food_items:
+        serialized = _serialize_food_item(db, f)
+        food_summary.append(
+            {
+                "name": serialized.name,
+                "category": f.category.name if f.category else None,
+                "price": serialized.price,
+                "stock_quantity": serialized.stock_quantity,
+                "unit": serialized.unit,
+                "needs_restock": serialized.needs_restock,
+                "available": serialized.is_available,
+                "stock_tracking": "recipe-based (auto)" if serialized.has_recipe else "manual",
+            }
+        )
+    needs_restock_dishes = [f["name"] for f in food_summary if f["needs_restock"]]
+
+    # --- Bazar List (raw ingredients) ---
+    bazar_items = db.query(models.BazarItem).all()
+    bazar_summary = [
         {
-            "name": f.name,
-            "category": f.category.name if f.category else None,
-            "price": f.price,
-            "stock_quantity": f.stock_quantity,
-            "unit": f.unit,
-            "reorder_threshold": f.reorder_threshold,
-            "needs_restock": f.needs_restock,
-            "available": f.is_available,
+            "name": b.name,
+            "quantity": b.quantity,
+            "unit": b.unit,
+            "reorder_threshold": b.reorder_threshold,
+            "needs_restock": b.needs_restock,
         }
-        for f in food_items
+        for b in bazar_items
+    ]
+    needs_restock_ingredients = [b["name"] for b in bazar_summary if b["needs_restock"]]
+
+    # --- Recipes (which dishes use which raw ingredients) ---
+    recipe_rows = db.query(models.RecipeIngredient).all()
+    recipes_by_dish = {}
+    for row in recipe_rows:
+        dish_name = row.food_item.name if row.food_item else "Unknown dish"
+        recipes_by_dish.setdefault(dish_name, []).append(
+            {
+                "ingredient": row.bazar_item.name if row.bazar_item else "Unknown",
+                "quantity_per_unit": row.quantity_per_unit,
+                "unit": row.bazar_item.unit if row.bazar_item else "",
+            }
+        )
+
+    # --- Dine-in tables (current floor status) ---
+    tables = db.query(models.DiningTable).filter(models.DiningTable.is_active == True).all()  # noqa: E712
+    tables_summary = []
+    for t in tables:
+        active_order = (
+            db.query(models.TableOrder)
+            .filter(models.TableOrder.table_id == t.id, models.TableOrder.is_closed == False)  # noqa: E712
+            .first()
+        )
+        tables_summary.append(
+            {
+                "table": t.name,
+                "capacity": t.capacity,
+                "status": active_order.status.value if active_order else "free",
+            }
+        )
+
+    # --- Today's bazar purchases (what's already been bought today) ---
+    from datetime import date as date_type
+    today_entries = (
+        db.query(models.TodayBazarEntry)
+        .filter(models.TodayBazarEntry.purchase_date == date_type.today())
+        .all()
+    )
+    today_bazar_summary = [
+        {
+            "ingredient": e.bazar_item.name if e.bazar_item else "Unknown",
+            "quantity_purchased": e.quantity_purchased,
+            "unit": e.bazar_item.unit if e.bazar_item else "",
+        }
+        for e in today_entries
     ]
 
-    needs_restock = [f["name"] for f in food_summary if f["needs_restock"]]
-    well_stocked = [f["name"] for f in food_summary if not f["needs_restock"]]
-
     system_prompt = f"""You are an AI operations assistant for a restaurant's admin dashboard.
-You help the admin understand staffing and inventory at a glance.
+You help the admin understand staffing, inventory, dine-in tables, and ingredient purchasing at a glance.
+All data below is live and current as of this exact question — always answer using it, never guess.
 
 EMPLOYEE DATA (JSON):
 {json.dumps(employees_summary, indent=2)}
 
-FOOD / INVENTORY DATA (JSON):
+DISHES / FOOD & INVENTORY (JSON) — "stock_tracking" tells you if a dish's stock is entered manually
+or calculated automatically from its recipe and the Bazar List:
 {json.dumps(food_summary, indent=2)}
+Dishes currently needing restock: {needs_restock_dishes or "None"}
 
-Items currently needing restock (at or below reorder threshold): {needs_restock or "None"}
-Items currently well stocked: {well_stocked or "None"}
+BAZAR LIST — raw ingredient stock (JSON):
+{json.dumps(bazar_summary, indent=2)}
+Ingredients currently needing restock: {needs_restock_ingredients or "None"}
+
+RECIPES — which raw ingredients each dish needs per unit made (JSON):
+{json.dumps(recipes_by_dish, indent=2)}
+
+DINE-IN TABLES — current floor status (JSON):
+{json.dumps(tables_summary, indent=2)}
+
+TODAY'S BAZAR PURCHASES SO FAR (JSON):
+{json.dumps(today_bazar_summary, indent=2)}
 
 Answer the admin's question using ONLY the data above. Be concise, use bullet points
-where helpful, and give clear, actionable recommendations (e.g. what to buy, how many
-employees are in each role, who might be understaffed, which items are overstocked).
+where helpful, and give clear, actionable recommendations (e.g. what to buy, staffing
+breakdowns, which tables are occupied, which ingredients or dishes need restocking).
 If the question cannot be answered from the data, say so honestly."""
 
     answer = await ask_groq(system_prompt, payload.question)
@@ -113,7 +189,7 @@ async def customer_ask(
             .filter(models.Rating.food_item_id == item.id)
             .first()
         )
-        avg_rating = round(agg[0], 2) if agg and agg[0] else None
+        avg_rating = round(float(agg[0]), 2) if agg and agg[0] else None
         rating_count = agg[1] if agg else 0
 
         recent_comments = (

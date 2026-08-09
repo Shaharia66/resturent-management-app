@@ -2,11 +2,13 @@ import React from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import { useSettings } from '../context/SettingsContext'
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth()
   const { itemCount } = useCart()
   const navigate = useNavigate()
+  const { settings } = useSettings()
 
   const linkClass = ({ isActive }) =>
     `text-sm font-medium tracking-wide transition-colors ${
@@ -23,9 +25,9 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
           <span className="seal-badge w-9 h-9 text-ivory font-display font-semibold text-sm">
-            O&E
+            {settings.logo_initials}
           </span>
-          <span className="font-display text-lg font-semibold text-ink">Olive &amp; Ember</span>
+          <span className="font-display text-lg font-semibold text-ink">{settings.restaurant_name}</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-7">

@@ -235,3 +235,19 @@ class TodayBazarEntry(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     bazar_item = relationship("BazarItem")
+
+class SiteSettings(Base):
+    __tablename__ = "site_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    restaurant_name = Column(String(150), default="Olive & Ember")
+    logo_initials = Column(String(10), default="O&E")
+    hero_heading = Column(String(300), default="Slow-cooked flavor,\nserved without delay.")
+    hero_subheading = Column(
+        Text,
+        default="Browse today's menu, see what fellow diners rated highest, and let our AI concierge help you pick your next favorite dish.",
+    )
+    hero_image_1_url = Column(String(500), nullable=True)
+    hero_image_2_url = Column(String(500), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    

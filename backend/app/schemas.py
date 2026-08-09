@@ -379,3 +379,23 @@ class TodayBazarEntryOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ---------- Site Settings ----------
+
+class SiteSettingsOut(BaseModel):
+    restaurant_name: str
+    logo_initials: str
+    hero_heading: str
+    hero_subheading: str
+    hero_image_1_url: Optional[str] = None
+    hero_image_2_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SiteSettingsUpdate(BaseModel):
+    restaurant_name: Optional[str] = None
+    logo_initials: Optional[str] = None
+    hero_heading: Optional[str] = None
+    hero_subheading: Optional[str] = None
