@@ -24,7 +24,9 @@ import AdminTableSettings from './pages/admin/AdminTableSettings'
 import PrintKitchenTicket from './pages/admin/PrintKitchenTicket'
 import PrintBill from './pages/admin/PrintBill'
 import AdminBazarList from './pages/admin/AdminBazarList'
-import AdminMakingFoodInfo from './pages/admin/AdminMakingFoodInfo'
+import AdminFoodRecipe from './pages/admin/AdminFoodRecipe'
+import AdminTodayBazar from './pages/admin/AdminTodayBazar'
+import PrintShoppingList from './pages/admin/PrintShoppingList'
 
 
 export default function App() {
@@ -61,7 +63,8 @@ export default function App() {
             <Route path="tables" element={<AdminTables />} />
             <Route path="tables/settings" element={<AdminTableSettings />} />
             <Route path="bazar" element={<AdminBazarList />} />
-            <Route path="making-food-info" element={<AdminMakingFoodInfo />} />
+            <Route path="food-recipe" element={<AdminFoodRecipe />} />
+            <Route path="today-bazar" element={<AdminTodayBazar />} />
             
           </Route>
           {/* Print pages render full-screen, without the admin sidebar */}
@@ -78,6 +81,14 @@ export default function App() {
             element={
               <ProtectedRoute adminOnly>
                 <PrintBill />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/print/shopping-list"
+            element={
+              <ProtectedRoute adminOnly>
+                <PrintShoppingList />
               </ProtectedRoute>
             }
           />

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import client from '../../api/client'
 import LoadingSpinner from '../../components/LoadingSpinner'
 
-export default function AdminMakingFoodInfo() {
+export default function AdminFoodRecipe() {
   const [foodItems, setFoodItems] = useState([])
   const [bazarItems, setBazarItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -91,7 +91,7 @@ export default function AdminMakingFoodInfo() {
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold mb-2">Making Food Info</h1>
+      <h1 className="text-2xl font-display font-semibold mb-2">Food Recipe</h1>
       <p className="text-sm text-olive-600 mb-6">
         Define the recipe for each dish — which raw ingredients (from the Bazar List) and how much of
         each are needed to make one unit. Once a dish has a recipe, its stock on the Food &amp; Inventory

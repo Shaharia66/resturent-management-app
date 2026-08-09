@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 
 from pydantic import BaseModel, EmailStr, Field
@@ -354,3 +354,28 @@ class FoodRecipeOut(BaseModel):
 
 class FoodRecipeUpdate(BaseModel):
     ingredients: List[RecipeIngredientIn]
+
+# ---------- Today's Bazar (shopping log) ----------
+
+class TodayBazarEntryCreate(BaseModel):
+    bazar_item_id: Optional[int] = None
+    new_item_name: Optional[str] = None
+    new_item_unit: str = "g"
+    new_item_reorder_threshold: float = 100
+    quantity_purchased: float = Field(gt=0)
+    purchase_date: Optional[date] = None
+    notes: Optional[str] = None
+
+
+class TodayBazarEntryOut(BaseModel):
+    id: int
+    bazar_item_id: int
+    bazar_item_name: str
+    unit: str
+    quantity_purchased: float
+    purchase_date: date
+    notes: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

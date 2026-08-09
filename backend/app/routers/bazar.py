@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+from datetime import date as date_type
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -41,6 +42,19 @@ def _serialize_recipe(db: Session, food_item: models.FoodItem) -> schemas.FoodRe
     ]
     return schemas.FoodRecipeOut(
         food_item_id=food_item.id, food_item_name=food_item.name, ingredients=ingredients
+    )
+
+
+def _serialize_today_entry(entry: models.TodayBazarEntry) -> schemas.TodayBazarEntryOut:
+    return schemas.TodayBazarEntryOut(
+        id=entry.id,
+        bazar_item_id=entry.bazar_item_id,
+        bazar_item_name=entry.bazar_item.name if entry.bazar_item else "Unknown",
+        unit=entry.bazar_item.unit if entry.bazar_item else "",
+        quantity_purchased=entry.quantity_purchased,
+        purchase_date=entry.purchase_date,
+        notes=entry.notes,
+        created_at=entry.created_at,
     )
 
 
@@ -107,7 +121,7 @@ def delete_bazar_item(
     return {"detail": "Bazar item deleted"}
 
 
-# ---------- Making Food Info (recipes) ----------
+# ---------- Food Recipe (ingredients needed per dish) ----------
 
 @router.get("/food-items/{food_item_id}/recipe", response_model=schemas.FoodRecipeOut)
 def get_food_recipe(
@@ -130,7 +144,6 @@ def update_food_recipe(
     if not food_item:
         raise HTTPException(status_code=404, detail="Food item not found")
 
-    # Replace the whole recipe in one go
     db.query(models.RecipeIngredient).filter(
         models.RecipeIngredient.food_item_id == food_item_id
     ).delete()
@@ -165,3 +178,80 @@ def clear_food_recipe(
     db.commit()
     return {"detail": "Recipe cleared — this dish is back to manual stock tracking"}
 
+
+# ---------- Today's Bazar (shopping log -> auto updates Bazar List) ----------
+
+@router.get("/today-bazar", response_model=List[schemas.TodayBazarEntryOut])
+def list_today_bazar_entries(
+    entry_date: Optional[date_type] = None,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    query = db.query(models.TodayBazarEntry)
+    if entry_date:
+        query = query.filter(models.TodayBazarEntry.purchase_date == entry_date)
+    entries = query.order_by(models.TodayBazarEntry.created_at.desc()).all()
+    return [_serialize_today_entry(e) for e in entries]
+
+
+@router.post("/today-bazar", response_model=schemas.TodayBazarEntryOut)
+def add_today_bazar_entry(
+    payload: schemas.TodayBazarEntryCreate,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    bazar_item = None
+    if payload.bazar_item_id:
+        bazar_item = (
+            db.query(models.BazarItem).filter(models.BazarItem.id == payload.bazar_item_id).first()
+        )
+        if not bazar_item:
+            raise HTTPException(status_code=404, detail="Bazar item not found")
+    elif payload.new_item_name:
+        existing = (
+            db.query(models.BazarItem).filter(models.BazarItem.name == payload.new_item_name).first()
+        )
+        if existing:
+            bazar_item = existing
+        else:
+            bazar_item = models.BazarItem(
+                name=payload.new_item_name,
+                quantity=0,
+                unit=payload.new_item_unit,
+                reorder_threshold=payload.new_item_reorder_threshold,
+            )
+            db.add(bazar_item)
+            db.flush()
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Select an existing ingredient or provide a new ingredient name",
+        )
+
+    # Auto add / update the Bazar List quantity with today's purchase
+    bazar_item.quantity = bazar_item.quantity + payload.quantity_purchased
+
+    entry = models.TodayBazarEntry(
+        bazar_item_id=bazar_item.id,
+        quantity_purchased=payload.quantity_purchased,
+        purchase_date=payload.purchase_date or date_type.today(),
+        notes=payload.notes,
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return _serialize_today_entry(entry)
+
+
+@router.delete("/today-bazar/{entry_id}")
+def delete_today_bazar_entry(
+    entry_id: int, db: Session = Depends(get_db), admin: models.User = Depends(get_current_admin)
+):
+    entry = db.query(models.TodayBazarEntry).filter(models.TodayBazarEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    if entry.bazar_item:
+        entry.bazar_item.quantity = max(0, entry.bazar_item.quantity - entry.quantity_purchased)
+    db.delete(entry)
+    db.commit()
+    return {"detail": "Entry removed and quantity reversed"}

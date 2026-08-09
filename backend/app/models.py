@@ -1,8 +1,8 @@
 import enum
-from datetime import datetime
+from datetime import datetime, date
 
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, Text, DateTime,
+    Column, Integer, String, Float, Boolean, Text, DateTime, Date,
     ForeignKey, Enum, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
@@ -224,3 +224,14 @@ class RecipeIngredient(Base):
     food_item = relationship("FoodItem", back_populates="recipe_rows")
     bazar_item = relationship("BazarItem", back_populates="recipe_rows")
 
+class TodayBazarEntry(Base):
+    __tablename__ = "today_bazar_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    bazar_item_id = Column(Integer, ForeignKey("bazar_items.id"), nullable=False)
+    quantity_purchased = Column(Float, nullable=False)
+    purchase_date = Column(Date, nullable=False, default=date.today)
+    notes = Column(String(300), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    bazar_item = relationship("BazarItem")
